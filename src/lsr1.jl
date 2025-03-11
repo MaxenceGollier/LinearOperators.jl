@@ -1,4 +1,4 @@
-export LSR1Operator, diag  #, InverseLSR1Operator
+export LSR1Operator, diag, InverseLSR1Operator
 
 "A data type to hold information relative to LSR1 operators."
 mutable struct LSR1Data{T, I <: Integer}
@@ -85,6 +85,33 @@ has_args5(op::LSR1Operator) = true
 use_prod5!(op::LSR1Operator) = true
 isallocated5(op::LSR1Operator) = true
 storage_type(op::LSR1Operator{T}) where {T} = Vector{T}
+
+"""
+    InverseLSR1Operator(T, n; [mem=5, scaling=false])
+    InverseLSR1Operator(n; [mem=5, scaling=false])
+Construct a limited-memory SR1 approximation in inverse form. If the type `T`
+is omitted, then `Float64` is used.
+"""
+function InverseLSR1Operator(T::Type, n::I; kwargs...) where {I <: Integer}
+  kwargs = Dict(kwargs)
+  delete!(kwargs, :inverse)
+  lsr1_data = LSR1Data(T, n; inverse = true, kwargs...)
+
+  function lsr1_multiply(
+    res::AbstractVector,
+    data::LSR1Data,
+    x::AbstractArray,
+    αm,
+    βm::T2,
+  ) where {T2}
+
+  end
+
+  prod! = @closure (res, x, α, β) -> lsr1_multiply(res, lsr1_data, x, α, β)
+  return LSR1Operator{T}(n, n, true, true, prod!, prod!, prod!, true, lsr1_data)
+end
+
+InverseLSR1Operator(n::Int; kwargs...) = InverseLSR1Operator(Float64, n; kwargs...)
 
 """
     LSR1Operator(T, n; [mem=5, scaling=false)
